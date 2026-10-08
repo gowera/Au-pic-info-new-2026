@@ -40,7 +40,7 @@ export function pageNumbers(current: number, total: number): (number | '…')[] 
 async function request(path: string, signal?: AbortSignal) {
  let last: unknown;
  for (let attempt = 0; attempt < 2; attempt++) {
-  try { const response = await fetch(`${API_URL}/${path}`, { signal }); if (!response.ok) throw new Error(`HTTP ${response.status}`); return response; }
+  try { const response = await fetch(`${API_URL}/${path}`, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) }); if (!response.ok) throw new Error(`HTTP ${response.status}`); return response; }
   catch (error) { last = error; if (signal?.aborted) throw error; }
  }
  throw new Error('Les articles sont temporairement indisponibles. Veuillez réessayer.', { cause: last });
