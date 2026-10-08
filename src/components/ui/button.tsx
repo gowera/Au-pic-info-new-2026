@@ -9,6 +9,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        nav: "bg-transparent text-primary-foreground hover:bg-primary/80 rounded-none",
+        radio: "bg-primary text-primary-foreground hover:bg-primary/90 text-xs h-9 rounded-sm",
+        radioPlay: "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full h-11 w-11",
+        footer: "bg-transparent text-on-dark hover:bg-muted/10 border border-muted-foreground/30",
         default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
