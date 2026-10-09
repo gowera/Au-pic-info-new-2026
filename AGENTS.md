@@ -13,3 +13,4 @@
 - Keep the shared radio provider in the root news shell so playback survives internal navigation and only starts after a user action.
 - Sanitize remote article HTML with an allowlist before rendering to preserve editorial content without executable code.
 - Use CDN asset pointers for imported article photographs and the source masthead; dynamically published photos remain sourced from the editorial API.
+- Keep application and tooling source in TypeScript while retaining Lovable's required TanStack Start bootstrap; this meets source-language consistency without breaking the platform runtime.
