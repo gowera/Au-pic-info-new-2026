@@ -19,7 +19,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
 }
 export function RadioButton() {
  const { playing, loading, toggle } = useContext(RadioContext);
- return <Button variant="radio" onClick={toggle} disabled={loading}>{playing ? <Pause /> : <Radio />}<span>{loading ? 'Connexion…' : playing ? 'Radio en écoute' : 'Écouter la radio'}</span><span className="live-dot" /></Button>;
+  return <Button variant="radio" onClick={toggle} disabled={loading} aria-pressed={playing}>{playing ? <Pause /> : <Play />}<span>{loading ? 'Connexion…' : playing ? 'Radio en écoute' : 'Écouter la radio'}</span><span className="live-dot" /></Button>;
 }
 export function RadioPanel() {
  const { playing, loading, error, toggle, volume, setVolume } = useContext(RadioContext);
