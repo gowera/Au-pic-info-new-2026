@@ -1,10 +1,13 @@
 import { Link, useRouter } from '@tanstack/react-router';
-import { CalendarDays, UserRound, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays, UserRound, ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { categoriesQuery, formatDate, pageNumbers, plainText, postImage, postsQuery, type Post } from '@/lib/news';
 import { RadioPanel } from './radio';
 import { SearchForm } from './shell';
+import { latestFeaturedPosts } from '@/lib/featured';
 export function ArticleLink({ post, className, children }: { post: Post; className?: string; children: React.ReactNode }) { return <Link to="/article/$slug" params={{ slug: post.slug }} className={className}>{children}</Link>; }
 export function PostMeta({ post, author = true }: { post: Post; author?: boolean }) { return <div className="post-meta"><span><CalendarDays size={12} />{formatDate(post.date)}</span>{author && <span><UserRound size={12} />{post._embedded?.author?.[0]?.name || 'La rédaction'}</span>}</div>; }
 export function PostCategories({ post }: { post: Post }) {
@@ -12,6 +15,31 @@ export function PostCategories({ post }: { post: Post }) {
  return <div className="post-categories">{cats.map(c => <Link key={c.id} to="/category/$slug" params={{ slug: c.slug }} search={{ page: 1, q: '' }}>{plainText(c.name)}</Link>)}</div>;
 }
 function Feature({ post, main = false }: { post: Post; main?: boolean }) { const image = postImage(post); return <article className={`feature ${main ? 'feature-main' : ''}`}>{image && <ArticleLink post={post} className="feature-image"><img src={image} alt={plainText(post.title.rendered)} fetchPriority={main ? 'high' : 'auto'} loading={main ? 'eager' : 'lazy'} /></ArticleLink>}<div className="feature-shade" /><div className="feature-content"><PostCategories post={post} /><h2><ArticleLink post={post}>{plainText(post.title.rendered)}</ArticleLink></h2><PostMeta post={post} author={main} /></div></article>; }
+function FeaturedCarousel({ posts }: { posts: Post[] }) {
+ const slides = latestFeaturedPosts(posts);
+ const [viewport, api] = useEmblaCarousel({ loop: true });
+ const [selected, setSelected] = useState(0);
+ const [paused, setPaused] = useState(false);
+ const [interacting, setInteracting] = useState(false);
+ useEffect(() => {
+  if (!api) return;
+  const select = () => setSelected(api.selectedScrollSnap());
+  select(); api.on('select', select); api.on('reInit', select);
+  return () => { api.off('select', select); api.off('reInit', select); };
+ }, [api]);
+ useEffect(() => {
+  if (!api || paused || interacting || slides.length < 2) return;
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const timer = window.setInterval(() => {
+   if (!document.hidden && !motion.matches) api.scrollNext();
+  }, 6000);
+  return () => window.clearInterval(timer);
+ }, [api, paused, interacting, slides.length]);
+ return <section className="featured-carousel" aria-label="Les cinq dernières actualités" aria-roledescription="carrousel" onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }}>
+  <div className="featured-viewport" ref={viewport}><div className="featured-track">{slides.map((post, index) => <div className="featured-slide" key={post.id} role="group" aria-roledescription="diapositive" aria-label={`${index + 1} sur ${slides.length}`} inert={index !== selected}><Feature post={post} main /></div>)}</div></div>
+  {slides.length > 1 && <div className="featured-controls"><Button variant="nav" size="icon" aria-label="Article principal précédent" onClick={() => api?.scrollPrev()}><ChevronLeft /></Button><span aria-live={paused || interacting ? 'polite' : 'off'}>{selected + 1} / {slides.length}</span><Button variant="nav" size="icon" aria-label="Article principal suivant" onClick={() => api?.scrollNext()}><ChevronRight /></Button><Button variant="nav" size="icon" aria-label={paused ? 'Reprendre le défilement' : 'Suspendre le défilement'} onClick={() => setPaused(value => !value)}>{paused ? <Play /> : <Pause />}</Button></div>}
+ </section>;
+}
 export function SectionTitle({ children, note }: { children: React.ReactNode; note?: string }) { return <div className="section-heading"><h2>{children}</h2>{note && <span>{note}</span>}</div>; }
 export function Sidebar({ posts }: { posts: Post[] }) {
  const { data: categories } = useSuspenseQuery(categoriesQuery);
@@ -19,7 +47,7 @@ export function Sidebar({ posts }: { posts: Post[] }) {
 }
 export function Archive({ page, q, category, title }: { page: number; q: string; category?: number; title?: string }) {
  const { data } = useSuspenseQuery(postsQuery(page, category, q));
- const posts = data.posts; const featured = page === 1 && !q && !category;
+  const posts = data.posts; const featured = page === 1 && !q && !category;
  return <main className="site-container news-main"><div className="trending"><strong>TOP TAGS</strong>{['Nord-Kivu','Goma','Rdc','M23','FARDC','Sud-Kivu','Bukavu'].map(tag => <Link key={tag} to="/" search={{ page: 1, q: tag }}>{tag}</Link>)}</div>{featured && posts[0] && <><div className="breaking"><span className="breaking-label"><span className="live-dot" /> À LA UNE</span><ArticleLink post={posts[0]}>{plainText(posts[0].title.rendered)}</ArticleLink><ArrowRight size={17} /></div><div className="feature-grid"><Feature post={posts[0]} main /><div className="feature-secondary">{posts.slice(1,5).map(p => <Feature key={p.id} post={p} />)}</div></div></>}<div className="content-layout"><section className="articles-section"><SectionTitle note={`${data.total.toLocaleString('fr-FR')} articles`}>{q ? `Résultats pour « ${q} »` : title || 'Dernières actualités'}</SectionTitle>{posts.length === 0 ? <div className="empty-state"><SearchForm /><p>Aucun article ne correspond à votre recherche.</p><Button asChild variant="outline"><Link to="/" search={{ page: 1, q: '' }}>Toutes les actualités</Link></Button></div> : <div className="article-list">{posts.map(post => <article key={post.id} className="article-row">{postImage(post) && <ArticleLink post={post} className="article-thumb"><img src={postImage(post)} alt={plainText(post.title.rendered)} loading="lazy" /></ArticleLink>}<div className="article-summary"><PostCategories post={post} /><h2><ArticleLink post={post}>{plainText(post.title.rendered)}</ArticleLink></h2><PostMeta post={post} /><p>{plainText(post.excerpt.rendered)}</p><ArticleLink post={post} className="read-more">Lire l’article <ArrowRight size={14} /></ArticleLink></div></article>)}</div>}{data.pages > 1 && <nav className="pagination" aria-label="Pagination des articles"><Button variant="outline" size="icon" disabled={page <= 1} asChild={page > 1}>{page > 1 ? <Link to="." search={{ page: page-1, q }} aria-label="Page précédente"><ChevronLeft /></Link> : <ChevronLeft />}</Button>{pageNumbers(page,data.pages).map((n,i) => n === '…' ? <span key={`dots-${i}`}>…</span> : <Button key={n} variant={n === page ? 'default' : 'outline'} size="icon" asChild><Link to="." search={{ page: n, q }} aria-current={n === page ? 'page' : undefined} aria-label={`Page ${n}`}>{n}</Link></Button>)}<Button variant="outline" size="icon" disabled={page >= data.pages} asChild={page < data.pages}>{page < data.pages ? <Link to="." search={{ page: page+1, q }} aria-label="Page suivante"><ChevronRight /></Link> : <ChevronRight />}</Button><span className="page-note">Page {page} sur {data.pages}</span></nav>}</section><Sidebar posts={posts} /></div></main>;
 }
 export function NewsError() { const router = useRouter(); return <main className="site-container error-state"><h1>Les articles sont momentanément indisponibles.</h1><p>La connexion au journal n’a pas pu être établie.</p><Button onClick={() => void router.invalidate()}>Réessayer</Button></main>; }
