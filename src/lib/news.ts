@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 import sanitizeHtml from 'sanitize-html';
+import { fetchNews } from './news.functions';
 
 export const API_URL = 'https://aupicinfo.com/wp-json/wp/v2';
 export const RADIO_URL = 'https://radio.nitro-server.uk/listen/aupicradio/radio.mp3';
@@ -37,27 +38,13 @@ export function pageNumbers(current: number, total: number): (number | '…')[] 
  const nums = [...new Set([1, current - 1, current, current + 1, total])].filter(n => n >= 1 && n <= total).sort((a,b) => a-b);
  return nums.flatMap((n,i) => i > 0 && n - (nums[i-1] ?? 0) > 1 ? ['…', n] : [n]) as (number | '…')[];
 }
-async function request(path: string, signal?: AbortSignal) {
- let last: unknown;
- for (let attempt = 0; attempt < 2; attempt++) {
-  try { const response = await fetch(`${API_URL}/${path}`, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) }); if (!response.ok) throw new Error(`HTTP ${response.status}`); return response; }
-  catch (error) { last = error; if (signal?.aborted) throw error; }
- }
- throw new Error('Les articles sont temporairement indisponibles. Veuillez réessayer.', { cause: last });
-}
-export const categoriesQuery = queryOptions({ queryKey: ['categories'], queryFn: async ({ signal }) => (await (await request('categories?per_page=100&_fields=id,name,slug,count', signal)).json()) as Category[], staleTime: 3600000 });
+export const categoriesQuery = queryOptions({ queryKey: ['categories'], queryFn: async () => (await fetchNews({ data: { kind: 'categories' } })).items as Category[], staleTime: 3600000 });
 export function postsQuery(page = 1, category?: number, search = '') {
- return queryOptions({ queryKey: ['posts', page, category, search], queryFn: async ({ signal }) => {
-  const params = new URLSearchParams({ per_page: String(PAGE_SIZE), page: String(page), _embed: 'wp:featuredmedia,author,wp:term', _fields: 'id,slug,date,link,title,excerpt,categories,_links,_embedded' });
-  if (category) params.set('categories', String(category)); if (search) params.set('search', search);
-  const response = await request(`posts?${params}`, signal);
-  return { posts: await response.json() as Post[], total: Number(response.headers.get('X-WP-Total') || 0), pages: Number(response.headers.get('X-WP-TotalPages') || 1) };
- }, staleTime: 120000, gcTime: 900000 });
+ return queryOptions({ queryKey: ['posts', page, category, search], queryFn: async () => {
+  const r = await fetchNews({ data: { kind: 'posts', page, category, search } });
+  return { posts: r.items as Post[], total: r.total, pages: r.pages };
+ }, staleTime: 120000, gcTime: 900000, placeholderData: (prev) => prev });
 }
 export function articleQuery(slug: string) {
- return queryOptions({ queryKey: ['article', slug], queryFn: async ({ signal }) => {
-  const response = await request(`posts?slug=${encodeURIComponent(slug)}&_embed=wp:featuredmedia,author,wp:term`, signal);
-  const posts = await response.json() as Post[]; const post = posts[0];
-  return post ? { ...post, content: { rendered: safeContent(post.content?.rendered || '') } } : null;
- }, staleTime: 300000 });
+ return queryOptions({ queryKey: ['article', slug], queryFn: async () => ((await fetchNews({ data: { kind: 'article', slug } })).items as Post[])[0] ?? null, staleTime: 300000 });
 }
