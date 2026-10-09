@@ -4,6 +4,6 @@
 - [x] Use TypeScript for the remaining JavaScript tooling configuration.
 - [ ] Remove TanStack Start: blocked by Lovable's required framework.
 - [ ] Reproduce the original news layout with red branding.
-- [ ] Connect original REST articles, categories, search and pagination.
+- [x] Connect original REST articles, categories, search and pagination.
 - [ ] Add full article reading pages and online radio.
-- [ ] Add requested footer credit and verify mobile and desktop.
+- [ ] Add requested footer credit and verify mobile and desktop.- [x] Bottom radio player opened by the listen button.
