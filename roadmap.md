@@ -1,4 +1,6 @@
 # Au Pic Info
+- [ ] Prevent image and layout overflow on all screen sizes.
+- [ ] Cycle the main feature through the five most recent articles and verify navigation.
 - [x] Keep the radio play button visible in the mobile header.
 - [x] Add the supplied logo to header, footer and favicon.
 - [x] Use TypeScript for the remaining JavaScript tooling configuration.

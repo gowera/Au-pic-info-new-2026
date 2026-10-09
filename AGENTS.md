@@ -14,3 +14,4 @@
 - Sanitize remote article HTML with an allowlist before rendering to preserve editorial content without executable code.
 - Use CDN asset pointers for imported article photographs and the source masthead; dynamically published photos remain sourced from the editorial API.
 - Keep application and tooling source in TypeScript while retaining Lovable's required TanStack Start bootstrap; this meets source-language consistency without breaking the platform runtime.
+- Use Embla for the featured news carousel with bounded slides and reduced-motion-aware autoplay; this provides touch navigation without changing archive pagination.
