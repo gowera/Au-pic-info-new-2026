@@ -1,6 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
-import sanitizeHtml from 'sanitize-html';
 import type { Post, Category } from './news';
 
 const input = z.discriminatedUnion('kind', [
@@ -27,8 +26,9 @@ export const fetchNews = createServerFn({ method: 'GET' }).inputValidator(input)
    const response = await fetch(url, { signal: AbortSignal.timeout(20000), headers: { Accept: 'application/json' } });
    if (!response.ok) throw new Error(`Source returned ${response.status}`);
    const result = await response.json() as Post[] | Category[];
+   const sanitizeHtml = data.kind === 'article' ? (await import('sanitize-html')).default : null;
    if (data.kind === 'article') {
-    for (const post of result as Post[]) if (post.content) post.content.rendered = sanitizeHtml(post.content.rendered, { allowedTags: [...sanitizeHtml.defaults.allowedTags,'img','figure','figcaption','video','source'], allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, img: ['src','alt','width','height','loading'], video: ['src','controls','poster'], source: ['src','type'] }, allowedSchemes: ['https','http','mailto'], transformTags: { img: (tagName, attribs) => ({ tagName, attribs: { ...attribs, loading: 'lazy' } }) } });
+    for (const post of result as Post[]) if (post.content && sanitizeHtml) post.content.rendered = sanitizeHtml(post.content.rendered, { allowedTags: [...sanitizeHtml.defaults.allowedTags,'img','figure','figcaption','video','source'], allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, img: ['src','alt','width','height','loading'], video: ['src','controls','poster'], source: ['src','type'] }, allowedSchemes: ['https','http','mailto'], transformTags: { img: (tagName, attribs) => ({ tagName, attribs: { ...attribs, loading: 'lazy' } }) } });
    }
    return { items: result, total: Number(response.headers.get('X-WP-Total') || 0), pages: Number(response.headers.get('X-WP-TotalPages') || 1) };
   } catch (error) { last=error; }
