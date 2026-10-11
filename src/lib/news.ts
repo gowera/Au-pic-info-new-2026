@@ -44,7 +44,7 @@ export function postImage(post: Post, full = false) {
   const local = assets[`../assets/news-${post.id}.jpg.asset.json`]?.default.url;
   const media = post._embedded?.["wp:featuredmedia"]?.[0];
   return (
-    local ||
+    (local ? `${import.meta.env.BASE_URL}${local.replace(/^\/+/, "")}` : undefined) ||
     (full
       ? media?.source_url
       : media?.media_details?.sizes?.["medium_large"]?.source_url || media?.source_url)

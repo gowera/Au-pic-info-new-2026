@@ -4,6 +4,7 @@ import { Home, Search, Menu, X, Facebook, Youtube, ArrowUp, ArrowRight } from "l
 import { Button } from "@/components/ui/button";
 import { navCategories } from "@/lib/news";
 import { RadioButton, RadioProvider } from "./radio";
+const publicAsset = (path: string) => `${import.meta.env.BASE_URL}${path}`;
 export function SearchForm({ compact = false }: { compact?: boolean }) {
   const navigate = useNavigate();
   function submit(e: FormEvent<HTMLFormElement>) {
@@ -71,7 +72,7 @@ export function NewsShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="masthead">
-          <img src="/images/aupic-banner.png" alt="" className="masthead-image" />
+          <img src={publicAsset("images/aupic-banner.png")} alt="" className="masthead-image" />
           <div className="masthead-shade" />
           <div className="site-container masthead-inner">
             <Link
@@ -81,7 +82,7 @@ export function NewsShell({ children }: { children: ReactNode }) {
               aria-label="Au Pic de l’Info — Accueil"
             >
               <img
-                src="/images/aupic-logo.png"
+                src={publicAsset("images/aupic-logo.png")}
                 alt="Au Pic de l’Info"
                 className="brand-logo"
                 width={150}
@@ -156,7 +157,7 @@ export function NewsShell({ children }: { children: ReactNode }) {
             aria-label="Au Pic de l’Info — Accueil"
           >
             <img
-              src="/images/aupic-logo.png"
+              src={publicAsset("images/aupic-logo.png")}
               alt="Au Pic de l’Info"
               className="footer-logo"
               width={104}

@@ -28,7 +28,7 @@ describe("Au Pic Info rules", () => {
         excerpt: { rendered: "" },
         categories: [],
       }),
-    ).toBe("/images/news-156052.jpg"));
+    ).toBe(`${import.meta.env.BASE_URL}images/news-156052.jpg`));
   it("loads ten posts per archive page instead of the whole archive", () =>
     expect(PAGE_SIZE).toBe(10));
   it("rejects invalid pagination", () => {
