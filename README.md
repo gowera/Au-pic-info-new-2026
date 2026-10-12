@@ -14,3 +14,4 @@ npm run dev
 Commandes disponibles : `npm run build` pour produire le site statique, `npm run preview` pour le prévisualiser et `npm test` pour exécuter les tests.
 
 En production, configurez l’hébergement pour servir `index.html` comme repli des routes inconnues afin que les liens directs vers les articles et catégories fonctionnent.
+"# Au-pic-info-new-2026" 
