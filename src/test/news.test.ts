@@ -16,7 +16,7 @@ describe("Au Pic Info rules", () => {
   it("uses the original REST API", () =>
     expect(API_URL).toBe("https://aupicinfo.com/wp-json/wp/v2"));
   it("uses the supplied radio stream", () =>
-    expect(RADIO_URL).toBe("https://radio.nitro-server.uk/listen/aupicradio/radio.mp3"));
+    expect(RADIO_URL).toBe("https://stream.zeno.fm/wnawq794tk8uv"));
   it("serves imported article photos from the public images folder", () =>
     expect(
       postImage({

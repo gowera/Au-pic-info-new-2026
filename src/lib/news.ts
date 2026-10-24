@@ -3,7 +3,7 @@ import sanitizeHtml from "sanitize-html";
 import { API_URL, fetchNews } from "./news-api";
 
 export { API_URL };
-export const RADIO_URL = "https://radio.nitro-server.uk/listen/aupicradio/radio.mp3";
+export const RADIO_URL = "https://stream.zeno.fm/wnawq794tk8uv";
 export const PAGE_SIZE = 10;
 export const navCategories = [
   { id: 121, slug: "politique", name: "Politique" },
