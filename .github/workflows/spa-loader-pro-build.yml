@@ -47,7 +47,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         env:
-          SPA_LOADER_WORKFLOW_VERSION: "3"
+          SPA_LOADER_WORKFLOW_VERSION: "5"
           CI: "true"
           HUSKY: "0"
         run: |
@@ -76,9 +76,21 @@ jobs:
       - name: Locate build output
         shell: bash
         run: |
-          for dir in dist build out public .output/public .next/standalone client/build client/dist frontend/dist frontend/build app/dist apps/web/dist packages/web/dist; do
-            if [ -f "$dir/index.html" ]; then echo "BUILD_DIR=$dir" >> "$GITHUB_ENV"; exit 0; fi
+          is_build_dir() {
+            local dir="$1"
+            [ -f "$dir/index.html" ] || return 1
+            if [ -d "$dir/src" ] && grep -Eiq '(/src/|\./src/|/@vite/client|main\.(jsx|tsx))' "$dir/index.html"; then return 1; fi
+            grep -Eiq '(src|href)=.*\.(js|mjs|css)' "$dir/index.html" || return 1
+            find "$dir" -maxdepth 8 -type f \( -iname '*.js' -o -iname '*.mjs' -o -iname '*.css' \) -print -quit | grep -q .
+          }
+          for dir in dist build out public www _site .output/public .next/standalone client/build client/dist frontend/dist frontend/build app/dist app/build apps/web/dist apps/web/build packages/web/dist packages/web/build; do
+            if is_build_dir "$dir"; then echo "BUILD_DIR=$dir" >> "$GITHUB_ENV"; exit 0; fi
           done
+          while IFS= read -r index; do
+            dir="${index%/index.html}"
+            [ "$dir" = "$index" ] && continue
+            if is_build_dir "$dir"; then echo "BUILD_DIR=$dir" >> "$GITHUB_ENV"; exit 0; fi
+          done < <(find . -type d \( -name .git -o -name node_modules \) -prune -o -type f -name index.html -print)
           echo "::error::No build output with index.html found"
           exit 1
       - uses: actions/upload-artifact@v4
